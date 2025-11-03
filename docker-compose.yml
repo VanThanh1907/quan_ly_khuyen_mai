@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MongoDB Service
+  mongodb:
+    image: mongo:7.0
+    container_name: promotion_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: promotion_management
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - promotion_network
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: promotion_backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/promotion_management
+      - JWT_SECRET=your_super_secret_jwt_key_change_this
+      - JWT_EXPIRE=7d
+      - PORT=5000
+    depends_on:
+      - mongodb
+    networks:
+      - promotion_network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: promotion_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - promotion_network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+networks:
+  promotion_network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

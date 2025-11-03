@@ -1,0 +1,120 @@
+========================================
+  PROMOTION MANAGEMENT SYSTEM
+  Complete Setup Instructions
+========================================
+
+STEP-BY-STEP GUIDE:
+
+Step 1: START MONGODB
+----------------------
+  Option A: Using MongoDB Compass
+    - Open MongoDB Compass application
+    - Click "Connect" (default: localhost:27017)
+  
+  Option B: Using Command Line
+    - Double-click: start-mongodb.bat
+    - OR open terminal and run: mongod
+    - Keep the window open!
+
+Step 2: TEST MONGODB CONNECTION
+--------------------------------
+  - Double-click: test-mongodb.bat
+  - You should see: "Connection test PASSED!"
+  - If failed, make sure Step 1 is done correctly
+
+Step 3: INSTALL DEPENDENCIES (First time only)
+-----------------------------------------------
+  - Double-click: setup.bat
+  - Wait for installation to complete (2-5 minutes)
+  - This creates sample data automatically
+
+Step 4: START THE APPLICATION
+------------------------------
+  - Double-click: run-all.bat
+  - Browser will open automatically
+  - You'll see 2 new windows (Backend + Frontend)
+
+Step 5: LOGIN AND USE
+----------------------
+  - Wait for browser to open at: http://localhost:3000
+  - Login with:
+    Admin: admin / admin123
+    User:  user / user123
+
+========================================
+QUICK REFERENCE:
+========================================
+
+First Time Setup:
+  1. start-mongodb.bat
+  2. setup.bat
+  3. run-all.bat
+
+Next Times:
+  1. start-mongodb.bat (if not running)
+  2. run-all.bat
+
+========================================
+AVAILABLE SCRIPTS:
+========================================
+
+run-all.bat         - Start everything (USE THIS!)
+quick-start.bat     - Quick launch
+start-mongodb.bat   - Start MongoDB only
+test-mongodb.bat    - Test MongoDB connection
+setup.bat           - Install dependencies + seed data
+reset-project.bat   - Clean install everything
+stop-all.bat        - Stop all servers
+
+========================================
+TROUBLESHOOTING:
+========================================
+
+Problem: "Cannot connect to MongoDB"
+Solution: 
+  1. Run: start-mongodb.bat
+  2. Run: test-mongodb.bat
+  3. If still fails, restart computer
+
+Problem: "Port already in use"
+Solution:
+  1. Run: stop-all.bat
+  2. Run: run-all.bat
+
+Problem: "Module not found"
+Solution:
+  1. Run: reset-project.bat
+  2. Run: run-all.bat
+
+Problem: Application won't start
+Solution:
+  1. Check MongoDB: test-mongodb.bat
+  2. Reset project: reset-project.bat
+  3. Start again: run-all.bat
+
+========================================
+ACCESS URLs:
+========================================
+
+Frontend:    http://localhost:3000
+Backend API: http://localhost:5000
+API Docs:    http://localhost:5000/api/promotions
+
+========================================
+IMPORTANT NOTES:
+========================================
+
+- MongoDB MUST be running before starting the app
+- Keep Backend and Frontend windows open
+- Don't close MongoDB window if using start-mongodb.bat
+- Use Ctrl+C in terminals to stop servers
+
+========================================
+FOR HELP:
+========================================
+
+See README.md for detailed documentation
+See QUICKSTART.md for quick start guide
+See API_TESTING.md for API examples
+
+========================================
