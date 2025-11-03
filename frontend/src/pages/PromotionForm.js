@@ -17,7 +17,7 @@ import {
   OutlinedInput,
   Chip
 } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import api from '../utils/api';
 
@@ -147,9 +147,9 @@ const PromotionForm = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" component="h1" gutterBottom>
+    <Container maxWidth="md" sx={{ py: 4 }} className="animate-fade-in">
+      <Paper elevation={3} sx={{ p: 4 }} className="animate-scale-in">
+        <Typography variant="h5" component="h1" gutterBottom className="text-gradient">
           {isEditMode ? 'Edit Promotion' : 'Create New Promotion'}
         </Typography>
 
@@ -221,24 +221,26 @@ const PromotionForm = () => {
 
             <Grid item xs={12} sm={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Start Date"
+                <DateTimePicker
+                  label="Start Date & Time"
                   value={formData.startDate}
                   onChange={(value) => handleDateChange('startDate', value)}
                   renderInput={(params) => <TextField {...params} fullWidth required />}
                   slotProps={{ textField: { fullWidth: true, required: true } }}
+                  ampm={true}
                 />
               </LocalizationProvider>
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="End Date"
+                <DateTimePicker
+                  label="End Date & Time"
                   value={formData.endDate}
                   onChange={(value) => handleDateChange('endDate', value)}
                   renderInput={(params) => <TextField {...params} fullWidth required />}
                   slotProps={{ textField: { fullWidth: true, required: true } }}
+                  ampm={true}
                 />
               </LocalizationProvider>
             </Grid>

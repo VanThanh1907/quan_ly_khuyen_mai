@@ -123,10 +123,22 @@ const Dashboard = () => {
     });
   };
 
+  const formatDateTime = (date) => {
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
+
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }} className="animate-fade-in">
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom className="text-gradient">
           Promotion Management Dashboard
         </Typography>
         
@@ -183,7 +195,7 @@ const Dashboard = () => {
           </Grid>
         </Grid>
 
-        <Paper>
+        <Paper className="animate-scale-in">
           <TableContainer>
             <Table>
               <TableHead>
@@ -191,8 +203,8 @@ const Dashboard = () => {
                   <TableCell>Name</TableCell>
                   <TableCell>Description</TableCell>
                   <TableCell align="center">Discount (%)</TableCell>
-                  <TableCell>Start Date</TableCell>
-                  <TableCell>End Date</TableCell>
+                  <TableCell>Start Date & Time</TableCell>
+                  <TableCell>End Date & Time</TableCell>
                   <TableCell align="center">Status</TableCell>
                   <TableCell align="center">Products</TableCell>
                   {isAdmin() && <TableCell align="center">Actions</TableCell>}
@@ -214,15 +226,30 @@ const Dashboard = () => {
                 ) : (
                   promotions.map((promotion) => (
                     <TableRow key={promotion._id} hover>
-                      <TableCell>{promotion.name}</TableCell>
+                      <TableCell><strong>{promotion.name}</strong></TableCell>
                       <TableCell>
                         {promotion.description
                           ? promotion.description.substring(0, 50) + '...'
                           : '-'}
                       </TableCell>
-                      <TableCell align="center">{promotion.discountPercentage}%</TableCell>
-                      <TableCell>{formatDate(promotion.startDate)}</TableCell>
-                      <TableCell>{formatDate(promotion.endDate)}</TableCell>
+                      <TableCell align="center">
+                        <Chip 
+                          label={`${promotion.discountPercentage}%`} 
+                          color="primary" 
+                          size="small"
+                          className="animate-pulse"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                          {formatDateTime(promotion.startDate)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                          {formatDateTime(promotion.endDate)}
+                        </Typography>
+                      </TableCell>
                       <TableCell align="center">
                         <Chip
                           label={promotion.status}

@@ -26,13 +26,16 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 
 const Products = () => {
   const { isAdmin } = useAuth();
+  const navigate = useNavigate();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -206,19 +209,19 @@ const Products = () => {
                   <TableCell align="right">Price</TableCell>
                   <TableCell align="right">Stock</TableCell>
                   <TableCell>Description</TableCell>
-                  {isAdmin() && <TableCell align="center">Actions</TableCell>}
+                  <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin() ? 6 : 5} align="center">
+                    <TableCell colSpan={6} align="center">
                       <CircularProgress />
                     </TableCell>
                   </TableRow>
                 ) : products.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin() ? 6 : 5} align="center">
+                    <TableCell colSpan={6} align="center">
                       No products found
                     </TableCell>
                   </TableRow>
@@ -234,24 +237,36 @@ const Products = () => {
                           ? product.description.substring(0, 50) + '...'
                           : '-'}
                       </TableCell>
-                      {isAdmin() && (
-                        <TableCell align="center">
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            onClick={() => handleOpenDialog(product)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => handleDelete(product._id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
-                      )}
+                      <TableCell align="center">
+                        <IconButton
+                          color="info"
+                          size="small"
+                          onClick={() => navigate(`/products/${product._id}`)}
+                          title="View Details"
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                        {isAdmin() && (
+                          <>
+                            <IconButton
+                              color="primary"
+                              size="small"
+                              onClick={() => handleOpenDialog(product)}
+                              title="Edit"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={() => handleDelete(product._id)}
+                              title="Delete"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

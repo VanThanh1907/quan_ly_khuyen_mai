@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -10,18 +10,9 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import PromotionForm from './pages/PromotionForm';
 import Products from './pages/Products';
-
-// Create Material-UI theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+import ProductDetail from './pages/ProductDetail';
+import ProductCatalog from './pages/ProductCatalog';
+import theme from './theme';
 
 function App() {
   return (
@@ -52,6 +43,28 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Products />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/products/:id"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <ProductDetail />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/catalog"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <ProductCatalog />
                   </Layout>
                 </PrivateRoute>
               }

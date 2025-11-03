@@ -30,56 +30,88 @@ const products = [
     price: 1299.99,
     category: 'Electronics',
     description: 'High-performance laptop for professionals',
-    stock: 50
+    stock: 50,
+    imageUrl: '/images/products/laptop-dell.jpg',
+    brand: 'Dell',
+    specifications: { processor: 'Intel i7', ram: '16GB', storage: '512GB SSD' },
+    ratings: 4.5
   },
   {
     name: 'iPhone 15 Pro',
     price: 999.99,
     category: 'Electronics',
     description: 'Latest iPhone with advanced features',
-    stock: 100
+    stock: 100,
+    imageUrl: '/images/products/iphone-15-pro.jpg',
+    brand: 'Apple',
+    specifications: { screen: '6.1 inch', storage: '256GB', camera: '48MP' },
+    ratings: 4.8
   },
   {
     name: 'Samsung 4K TV 55"',
     price: 699.99,
     category: 'Electronics',
     description: 'Smart TV with stunning picture quality',
-    stock: 30
+    stock: 30,
+    imageUrl: '/images/products/samsung-tv.jpg',
+    brand: 'Samsung',
+    specifications: { screen: '55 inch', resolution: '4K UHD', smart: 'Yes' },
+    ratings: 4.6
   },
   {
     name: 'Nike Air Max Shoes',
     price: 129.99,
     category: 'Fashion',
     description: 'Comfortable running shoes',
-    stock: 200
+    stock: 200,
+    imageUrl: '/images/products/nike-shoes.jpg',
+    brand: 'Nike',
+    specifications: { size: '8-12', color: 'Multiple', material: 'Mesh' },
+    ratings: 4.4
   },
   {
     name: 'Adidas T-Shirt',
     price: 29.99,
     category: 'Fashion',
     description: 'Cotton sports t-shirt',
-    stock: 300
+    stock: 300,
+    imageUrl: '/images/products/adidas-tshirt.jpg',
+    brand: 'Adidas',
+    specifications: { size: 'S-XXL', material: '100% Cotton', fit: 'Regular' },
+    ratings: 4.2
   },
   {
     name: 'Coffee Maker Deluxe',
     price: 89.99,
     category: 'Home & Kitchen',
     description: 'Programmable coffee maker with timer',
-    stock: 75
+    stock: 75,
+    imageUrl: '/images/products/coffee-maker.jpg',
+    brand: 'Cuisinart',
+    specifications: { capacity: '12 cups', programmable: 'Yes', timer: 'Yes' },
+    ratings: 4.3
   },
   {
     name: 'Blender Pro 3000',
     price: 59.99,
     category: 'Home & Kitchen',
     description: 'High-speed blender for smoothies',
-    stock: 60
+    stock: 60,
+    imageUrl: '/images/products/blender.jpg',
+    brand: 'NutriBullet',
+    specifications: { power: '1000W', capacity: '64oz', speeds: '3' },
+    ratings: 4.5
   },
   {
     name: 'Gaming Mouse RGB',
     price: 49.99,
     category: 'Electronics',
     description: 'Ergonomic gaming mouse with RGB lighting',
-    stock: 150
+    stock: 150,
+    imageUrl: '/images/products/gaming-mouse.jpg',
+    brand: 'Logitech',
+    specifications: { dpi: '16000', buttons: '7', wireless: 'No' },
+    ratings: 4.7
   }
 ];
 
@@ -103,14 +135,14 @@ const seedDatabase = async () => {
     const createdProducts = await Product.create(products);
     console.log(`${createdProducts.length} products created`);
 
-    // Create sample promotions
+    // Create sample promotions with specific times
     const promotions = [
       {
         name: 'Black Friday Electronics Sale',
         description: 'Massive discounts on all electronics items',
         discountPercentage: 25,
-        startDate: new Date('2025-11-01'),
-        endDate: new Date('2025-11-30'),
+        startDate: new Date('2025-11-01T00:00:00'),
+        endDate: new Date('2025-11-30T23:59:59'),
         applicableProducts: createdProducts
           .filter(p => p.category === 'Electronics')
           .map(p => p._id),
@@ -120,8 +152,8 @@ const seedDatabase = async () => {
         name: 'Summer Fashion Clearance',
         description: 'Clear out summer inventory with amazing deals',
         discountPercentage: 40,
-        startDate: new Date('2025-08-01'),
-        endDate: new Date('2025-08-31'),
+        startDate: new Date('2025-08-01T08:00:00'),
+        endDate: new Date('2025-08-31T20:00:00'),
         applicableProducts: createdProducts
           .filter(p => p.category === 'Fashion')
           .map(p => p._id),
@@ -131,8 +163,8 @@ const seedDatabase = async () => {
         name: 'Kitchen Essentials Promo',
         description: 'Upgrade your kitchen with discounted appliances',
         discountPercentage: 15,
-        startDate: new Date('2025-10-15'),
-        endDate: new Date('2025-12-31'),
+        startDate: new Date('2025-10-15T10:30:00'),
+        endDate: new Date('2025-12-31T18:45:30'),
         applicableProducts: createdProducts
           .filter(p => p.category === 'Home & Kitchen')
           .map(p => p._id),
@@ -142,8 +174,8 @@ const seedDatabase = async () => {
         name: 'New Year Sale',
         description: 'Start the new year with great deals',
         discountPercentage: 30,
-        startDate: new Date('2026-01-01'),
-        endDate: new Date('2026-01-15'),
+        startDate: new Date('2026-01-01T00:00:00'),
+        endDate: new Date('2026-01-15T23:59:59'),
         applicableProducts: createdProducts.map(p => p._id),
         status: 'inactive'
       },
@@ -151,8 +183,8 @@ const seedDatabase = async () => {
         name: 'Weekend Flash Sale',
         description: 'Limited time offer - this weekend only!',
         discountPercentage: 50,
-        startDate: new Date('2024-12-01'),
-        endDate: new Date('2024-12-03'),
+        startDate: new Date('2024-12-01T06:00:00'),
+        endDate: new Date('2024-12-03T23:59:59'),
         applicableProducts: [createdProducts[0]._id, createdProducts[1]._id],
         status: 'expired'
       }

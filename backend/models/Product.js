@@ -30,6 +30,24 @@ const productSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Stock cannot be negative']
   },
+  imageUrl: {
+    type: String,
+    default: '/images/products/placeholder.jpg'
+  },
+  brand: {
+    type: String,
+    trim: true
+  },
+  ratings: {
+    type: Number,
+    min: 0,
+    max: 5,
+    default: 0
+  },
+  specifications: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   createdAt: {
     type: Date,
     default: Date.now
