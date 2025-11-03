@@ -4,6 +4,9 @@ const cors = require('cors');
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
 
+// ⭐ Import cron job
+const { startPromotionStatusUpdater } = require('./jobs/updatePromotionStatus');
+
 // Load environment variables
 dotenv.config();
 
@@ -53,6 +56,9 @@ const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // ⭐ Khởi động cron job sau khi server start
+  startPromotionStatusUpdater();
 });
 
 // Handle unhandled promise rejections

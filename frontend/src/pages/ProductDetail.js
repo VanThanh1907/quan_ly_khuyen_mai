@@ -219,25 +219,28 @@ const ProductDetail = () => {
                 </Typography>
               </Stack>
 
-              {/* Price Section */}
+              {/* ⭐ Price Section - Sử dụng pricing từ API */}
               <Card
                 elevation={4}
                 sx={{
                   p: 3,
                   mb: 3,
-                  background: promotion
+                  background: product.pricing?.promotion
                     ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                   borderRadius: 3,
                   color: 'white',
                 }}
               >
-                {promotion ? (
+                {product.pricing?.promotion ? (
                   <Box>
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                       <LocalOffer />
                       <Typography variant="h6">Special Promotion Active!</Typography>
                     </Stack>
+                    <Typography variant="caption" sx={{ opacity: 0.9, mb: 1, display: 'block' }}>
+                      {product.pricing.promotion.name}
+                    </Typography>
                     <Typography
                       variant="h4"
                       sx={{
@@ -245,7 +248,7 @@ const ProductDetail = () => {
                         mb: 1,
                       }}
                     >
-                      ${discountedPrice.toFixed(2)}
+                      ${product.pricing.discountedPrice.toFixed(2)}
                     </Typography>
                     <Typography
                       variant="h6"
@@ -255,17 +258,21 @@ const ProductDetail = () => {
                         mb: 1,
                       }}
                     >
-                      ${product.price.toFixed(2)}
+                      ${product.pricing.originalPrice.toFixed(2)}
                     </Typography>
                     <Chip
                       icon={<CheckCircle />}
-                      label={`Save $${savings.toFixed(2)}`}
+                      label={`Save $${product.pricing.saveAmount.toFixed(2)} (-${product.pricing.discountPercentage}%)`}
                       sx={{
                         background: 'rgba(255,255,255,0.2)',
                         color: 'white',
                         fontWeight: 'bold',
+                        mb: 1,
                       }}
                     />
+                    <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mt: 1 }}>
+                      Promotion ends: {formatDateTime(product.pricing.promotion.endDate)}
+                    </Typography>
                   </Box>
                 ) : (
                   <Box>

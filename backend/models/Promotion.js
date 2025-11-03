@@ -55,6 +55,76 @@ const promotionSchema = new mongoose.Schema({
   }
 });
 
+// ⭐ VIRTUAL FIELD: Tính status động dựa trên thời gian
+promotionSchema.virtual('computedStatus').get(function() {
+  const now = new Date();
+  const start = new Date(this.startDate);
+  const end = new Date(this.endDate);
+
+  if (now < start) {
+    return 'inactive'; // Chưa bắt đầu
+  } else if (now >= start && now <= end) {
+    return 'active'; // Đang diễn ra
+  } else {
+    return 'expired'; // Đã hết hạn
+  }
+});
+
+// ⭐ METHOD: Tính thời gian còn lại
+promotionSchema.methods.getTimeRemaining = function() {
+  const now = new Date();
+  const start = new Date(this.startDate);
+  const end = new Date(this.endDate);
+  
+  if (now < start) {
+    // Thời gian tới khi bắt đầu
+    const diff = start - now;
+    return {
+      status: 'starts_in',
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000)
+    };
+  } else if (now <= end) {
+    // Thời gian còn lại
+    const diff = end - now;
+    return {
+      status: 'ends_in',
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000)
+    };
+  } else {
+    return {
+      status: 'expired',
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0
+    };
+  }
+};
+
+// ⭐ STATIC METHOD: Cập nhật status tất cả promotions
+promotionSchema.statics.updateAllStatuses = async function() {
+  const promotions = await this.find({});
+  let updated = 0;
+
+  for (const promo of promotions) {
+    const computedStatus = promo.computedStatus;
+    if (promo.status !== computedStatus) {
+      promo.status = computedStatus;
+      promo.updatedAt = new Date();
+      await promo.save();
+      updated++;
+    }
+  }
+
+  return { total: promotions.length, updated };
+};
+
 // Update the updatedAt timestamp before saving
 promotionSchema.pre('save', function(next) {
   this.updatedAt = Date.now();

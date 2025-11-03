@@ -226,6 +226,24 @@ const ProductCatalog = () => {
                     },
                   }}
                 >
+                  {/* ⭐ PROMOTION BADGE - Nếu có giảm giá */}
+                  {product.pricing?.promotion && (
+                    <Chip
+                      icon={<OfferIcon />}
+                      label={`-${product.pricing.discountPercentage}%`}
+                      color="error"
+                      size="small"
+                      className="animate-pulse"
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        right: 10,
+                        zIndex: 1,
+                        fontWeight: 'bold',
+                      }}
+                    />
+                  )}
+
                   {/* Stock Badge */}
                   {product.stock < 20 && (
                     <Chip
@@ -320,18 +338,40 @@ const ProductCatalog = () => {
                       {product.description}
                     </Typography>
 
-                    {/* Price */}
+                    {/* ⭐ Price - Hiển thị giá gốc và giá sau giảm */}
                     <Box mt={2}>
-                      <Typography 
-                        variant="h5" 
-                        color="primary" 
-                        fontWeight="bold"
-                        className="text-gradient"
-                      >
-                        ${product.price.toFixed(2)}
-                      </Typography>
+                      {product.pricing?.promotion ? (
+                        <>
+                          <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ textDecoration: 'line-through', mb: 0.5 }}
+                          >
+                            ${product.pricing.originalPrice.toFixed(2)}
+                          </Typography>
+                          <Typography 
+                            variant="h5" 
+                            color="error" 
+                            fontWeight="bold"
+                          >
+                            ${product.pricing.discountedPrice.toFixed(2)}
+                          </Typography>
+                          <Typography variant="caption" color="success.main" fontWeight="bold">
+                            Save ${product.pricing.saveAmount.toFixed(2)}
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography 
+                          variant="h5" 
+                          color="primary" 
+                          fontWeight="bold"
+                          className="text-gradient"
+                        >
+                          ${product.price.toFixed(2)}
+                        </Typography>
+                      )}
                       {product.stock > 0 && (
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
                           {product.stock} in stock
                         </Typography>
                       )}

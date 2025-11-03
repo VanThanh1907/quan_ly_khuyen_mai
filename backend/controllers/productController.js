@@ -1,4 +1,49 @@
 const Product = require('../models/Product');
+const Promotion = require('../models/Promotion');
+
+/**
+ * ⭐ Tính giá sau giảm cho một product
+ */
+const calculateDiscountedPrice = async (product) => {
+  // Tìm promotions active áp dụng cho product này
+  const activePromotions = await Promotion.find({
+    applicableProducts: product._id,
+    status: 'active',
+    $expr: {
+      $and: [
+        { $lte: ['$startDate', new Date()] },
+        { $gte: ['$endDate', new Date()] }
+      ]
+    }
+  }).sort({ discountPercentage: -1 }); // Lấy discount cao nhất
+
+  if (activePromotions.length > 0) {
+    const bestPromo = activePromotions[0];
+    const discountAmount = (product.price * bestPromo.discountPercentage) / 100;
+    const discountedPrice = product.price - discountAmount;
+    
+    return {
+      originalPrice: product.price,
+      discountedPrice: Math.round(discountedPrice * 100) / 100,
+      discountPercentage: bestPromo.discountPercentage,
+      saveAmount: Math.round(discountAmount * 100) / 100,
+      promotion: {
+        id: bestPromo._id,
+        name: bestPromo.name,
+        description: bestPromo.description,
+        endDate: bestPromo.endDate
+      }
+    };
+  }
+
+  return {
+    originalPrice: product.price,
+    discountedPrice: product.price,
+    discountPercentage: 0,
+    saveAmount: 0,
+    promotion: null
+  };
+};
 
 /**
  * @desc    Get all products
@@ -37,9 +82,20 @@ exports.getProducts = async (req, res) => {
 
     const total = await Product.countDocuments(query);
 
+    // ⭐ Tính giá sau giảm cho mỗi product
+    const productsWithPricing = await Promise.all(
+      products.map(async (product) => {
+        const pricing = await calculateDiscountedPrice(product);
+        return {
+          ...product.toObject(),
+          pricing
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      data: products,
+      data: productsWithPricing,
       pagination: {
         total,
         page: parseInt(page),
@@ -71,9 +127,15 @@ exports.getProduct = async (req, res) => {
       });
     }
 
+    // ⭐ Tính giá sau giảm
+    const pricing = await calculateDiscountedPrice(product);
+
     res.status(200).json({
       success: true,
-      data: product
+      data: {
+        ...product.toObject(),
+        pricing
+      }
     });
   } catch (error) {
     res.status(400).json({
