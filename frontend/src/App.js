@@ -11,7 +11,6 @@ import Dashboard from './pages/Dashboard';
 import PromotionForm from './pages/PromotionForm';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
-import ProductCatalog from './pages/ProductCatalog';
 import ProductCatalogGothic from './pages/ProductCatalogGothic';
 import theme from './theme';
 
@@ -65,22 +64,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Layout>
-                    <ProductCatalog />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/catalog-gothic"
-              element={
-                <PrivateRoute>
-                  <Layout>
                     <ProductCatalogGothic />
                   </Layout>
                 </PrivateRoute>
               }
             />
+            
+            {/* Redirect old gothic route to new catalog */}
+            <Route path="/catalog-gothic" element={<Navigate to="/catalog" replace />} />
             
             <Route
               path="/promotions/new"

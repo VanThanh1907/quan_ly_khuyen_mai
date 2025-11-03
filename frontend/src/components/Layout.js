@@ -21,11 +21,75 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
+// Halloween styles
+const halloweenLayoutStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
+  
+  @keyframes float-nav {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  @keyframes wiggle-nav {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+  
+  @keyframes glow-nav {
+    0%, 100% { text-shadow: 0 0 10px #ff8c00, 0 0 20px #ff8c00; }
+    50% { text-shadow: 0 0 20px #ff8c00, 0 0 40px #ff8c00, 0 0 60px #ffa500; }
+  }
+  
+  @keyframes click-effect {
+    0% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    50% { 
+      transform: scale(1.5) rotate(180deg);
+      opacity: 0.7;
+    }
+    100% { 
+      transform: scale(0) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  .halloween-navbar {
+    background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 50%, #1a0f2e 100%) !important;
+    border-bottom: 3px solid #ff8c00;
+    box-shadow: 0 4px 20px rgba(255, 140, 0, 0.3);
+  }
+  
+  .halloween-footer {
+    background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 50%, #1a0f2e 100%) !important;
+    border-top: 3px solid #ff8c00;
+    box-shadow: 0 -4px 20px rgba(255, 140, 0, 0.3);
+  }
+`;
+
 const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [clickEffects, setClickEffects] = React.useState([]);
+
+  // Click effect handler
+  const handlePageClick = (e) => {
+    const effect = {
+      id: Date.now(),
+      x: e.clientX,
+      y: e.clientY,
+      emoji: ['🎃', '👻', '🦇', '🕷️', '✨'][Math.floor(Math.random() * 5)]
+    };
+    
+    setClickEffects(prev => [...prev, effect]);
+    
+    setTimeout(() => {
+      setClickEffects(prev => prev.filter(eff => eff.id !== effect.id));
+    }, 1000);
+  };
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -41,153 +105,292 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static" className="gradient-animated">
-        <Toolbar sx={{ py: 1 }}>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ 
-              flexGrow: 0, 
-              mr: 4, 
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '1.4rem',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
-            }}
-            onClick={() => navigate('/dashboard')}
-            className="animate-float"
-          >
-            🎉 Promotion Manager
-          </Typography>
-          
-          <Box sx={{ flexGrow: 1, display: 'flex', gap: 2 }}>
-            <Button
-              color="inherit"
-              startIcon={<DashboardIcon />}
-              onClick={() => navigate('/dashboard')}
-              className="smooth-transition"
-              sx={{
-                backgroundColor: location.pathname === '/dashboard' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                borderRadius: 2,
-                px: 2,
-                fontWeight: 600,
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
-            >
-              Promotions
-            </Button>
-            <Button
-              color="inherit"
-              startIcon={<InventoryIcon />}
-              onClick={() => navigate('/products')}
-              className="smooth-transition"
-              sx={{
-                backgroundColor: location.pathname === '/products' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                borderRadius: 2,
-                px: 2,
-                fontWeight: 600,
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
-            >
-              Products
-            </Button>
-            <Button
-              color="inherit"
-              startIcon={<ShoppingCartIcon />}
-              onClick={() => navigate('/catalog')}
-              className="smooth-transition"
-              sx={{
-                backgroundColor: location.pathname === '/catalog' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                borderRadius: 2,
-                px: 2,
-                fontWeight: 600,
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
-            >
-              🛍️ Catalog
-            </Button>
-            <Button
-              color="inherit"
-              startIcon={<GothicIcon />}
-              onClick={() => navigate('/catalog-gothic')}
-              className="smooth-transition"
-              sx={{
-                backgroundColor: location.pathname === '/catalog-gothic' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                borderRadius: 2,
-                px: 2,
-                fontWeight: 600,
-                border: location.pathname === '/catalog-gothic' ? '1px solid rgba(255,255,255,0.4)' : 'none',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
-                }
-              }}
-            >
-              📖 Gothic Emporium
-            </Button>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2">
-              {user?.username} {isAdmin() && '(Admin)'}
-            </Typography>
-            <IconButton
-              size="large"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <AccountCircle />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={handleLogout}>
-                <LogoutIcon sx={{ mr: 1 }} fontSize="small" />
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      <Box component="main" sx={{ flexGrow: 1, backgroundColor: '#f8fafc' }}>
-        {children}
-      </Box>
-
-      <Box
-        component="footer"
-        sx={{
-          py: 3,
-          px: 2,
-          mt: 'auto',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          textAlign: 'center'
-        }}
+    <>
+      <style>{halloweenLayoutStyles}</style>
+      <Box 
+        sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}
+        onClick={handlePageClick}
       >
-        <Container maxWidth="xl">
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            © 2025 Promotion Management System. All rights reserved. 💼
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9, mt: 0.5, display: 'block' }}>
-            Built with ❤️ using React & Node.js
-          </Typography>
-        </Container>
+        {/* Click effects */}
+        {clickEffects.map(effect => (
+          <div 
+            key={effect.id}
+            style={{
+              position: 'fixed',
+              left: effect.x,
+              top: effect.y,
+              fontSize: '2rem',
+              animation: 'click-effect 1s ease-out forwards',
+              pointerEvents: 'none',
+              zIndex: 9999
+            }}
+          >
+            {effect.emoji}
+          </div>
+        ))}
+
+        <AppBar position="static" className="halloween-navbar">
+          <Toolbar sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 4 }}>
+              <Typography
+                sx={{ 
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                  mr: 1,
+                  animation: 'wiggle-nav 2s ease-in-out infinite'
+                }}
+              >
+                🎃
+              </Typography>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ 
+                  flexGrow: 0,
+                  cursor: 'pointer',
+                  fontFamily: 'Creepster, cursive',
+                  fontWeight: 700,
+                  fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2rem' },
+                  color: '#ff8c00',
+                  animation: 'glow-nav 2s ease-in-out infinite',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    transition: 'transform 0.3s ease'
+                  }
+                }}
+                onClick={() => navigate('/dashboard')}
+              >
+                SPOOKY MANAGER
+              </Typography>
+              <Typography
+                sx={{ 
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                  ml: 1,
+                  animation: 'float-nav 3s ease-in-out infinite'
+                }}
+              >
+                👻
+              </Typography>
+            </Box>
+
+            
+            <Box sx={{ flexGrow: 1, display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Button
+                startIcon={<DashboardIcon />}
+                onClick={() => navigate('/dashboard')}
+                sx={{
+                  background: location.pathname === '/dashboard' 
+                    ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)' 
+                    : 'rgba(45, 27, 78, 0.6)',
+                  color: location.pathname === '/dashboard' ? '#1a0f2e' : '#ffa500',
+                  border: '2px solid',
+                  borderColor: location.pathname === '/dashboard' ? '#ffa500' : '#ff8c00',
+                  borderRadius: 2,
+                  px: 2.5,
+                  py: 0.8,
+                  fontFamily: 'Creepster, cursive',
+                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                  fontWeight: 700,
+                  boxShadow: location.pathname === '/dashboard' 
+                    ? '0 0 15px rgba(255, 140, 0, 0.5)' 
+                    : 'none',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'translateY(-3px) scale(1.05)',
+                    boxShadow: '0 0 25px rgba(255, 140, 0, 0.7)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                🎃 Promotions
+              </Button>
+              <Button
+                startIcon={<InventoryIcon />}
+                onClick={() => navigate('/products')}
+                sx={{
+                  background: location.pathname === '/products' 
+                    ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)' 
+                    : 'rgba(45, 27, 78, 0.6)',
+                  color: location.pathname === '/products' ? '#1a0f2e' : '#ffa500',
+                  border: '2px solid',
+                  borderColor: location.pathname === '/products' ? '#ffa500' : '#ff8c00',
+                  borderRadius: 2,
+                  px: 2.5,
+                  py: 0.8,
+                  fontFamily: 'Creepster, cursive',
+                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                  fontWeight: 700,
+                  boxShadow: location.pathname === '/products' 
+                    ? '0 0 15px rgba(255, 140, 0, 0.5)' 
+                    : 'none',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'translateY(-3px) scale(1.05)',
+                    boxShadow: '0 0 25px rgba(255, 140, 0, 0.7)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                🧪 Products
+              </Button>
+              <Button
+                startIcon={<ShoppingCartIcon />}
+                onClick={() => navigate('/catalog')}
+                sx={{
+                  background: location.pathname === '/catalog' 
+                    ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)' 
+                    : 'rgba(45, 27, 78, 0.6)',
+                  color: location.pathname === '/catalog' ? '#1a0f2e' : '#ffa500',
+                  border: '2px solid',
+                  borderColor: location.pathname === '/catalog' ? '#ffa500' : '#ff8c00',
+                  borderRadius: 2,
+                  px: 2.5,
+                  py: 0.8,
+                  fontFamily: 'Creepster, cursive',
+                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                  fontWeight: 700,
+                  boxShadow: location.pathname === '/catalog' 
+                    ? '0 0 15px rgba(255, 140, 0, 0.5)' 
+                    : 'none',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'translateY(-3px) scale(1.05)',
+                    boxShadow: '0 0 25px rgba(255, 140, 0, 0.7)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                🛍️ Catalog
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                background: 'rgba(45, 27, 78, 0.6)',
+                border: '2px solid #ff8c00',
+                borderRadius: 2,
+                px: 2,
+                py: 0.5
+              }}>
+                <Typography sx={{ 
+                  fontFamily: 'Creepster, cursive',
+                  fontSize: { xs: '0.9rem', sm: '1rem' },
+                  color: '#ffa500',
+                  mr: 1
+                }}>
+                  👤 {user?.username}
+                </Typography>
+                {isAdmin() && (
+                  <Typography sx={{ 
+                    fontFamily: 'Creepster, cursive',
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    color: '#39ff14',
+                    background: 'rgba(57, 255, 20, 0.1)',
+                    px: 1,
+                    py: 0.3,
+                    borderRadius: 1,
+                    border: '1px solid #39ff14'
+                  }}>
+                    👑 Admin
+                  </Typography>
+                )}
+              </Box>
+              <IconButton
+                size="large"
+                onClick={handleMenu}
+                sx={{
+                  color: '#ff8c00',
+                  background: 'rgba(45, 27, 78, 0.6)',
+                  border: '2px solid #ff8c00',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'rotate(15deg) scale(1.1)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                <AccountCircle />
+              </IconButton>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    background: 'rgba(26, 15, 46, 0.98)',
+                    border: '2px solid #ff8c00',
+                    boxShadow: '0 0 20px rgba(255, 140, 0, 0.5)',
+                    mt: 1
+                  }
+                }}
+              >
+                <MenuItem 
+                  onClick={handleLogout}
+                  sx={{
+                    fontFamily: 'Creepster, cursive',
+                    fontSize: '1.1rem',
+                    color: '#ffa500',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #dc143c 0%, #ff0000 100%)',
+                      color: '#fff'
+                    }
+                  }}
+                >
+                  <LogoutIcon sx={{ mr: 1, color: '#dc143c' }} fontSize="small" />
+                  🚪 Logout
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <Box component="main" sx={{ flexGrow: 1, backgroundColor: '#1a0f2e' }}>
+          {children}
+        </Box>
+
+        <Box
+          component="footer"
+          className="halloween-footer"
+          sx={{
+            py: 1.5,
+            px: 2,
+            mt: 'auto'
+          }}
+        >
+          <Container maxWidth="xl">
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap'
+            }}>
+              <Typography sx={{ 
+                fontFamily: 'Creepster, cursive',
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                color: '#ff8c00',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+              }}>
+                🎃 © 2025 Spooky Deals
+              </Typography>
+              
+              <Typography sx={{ 
+                fontFamily: 'Creepster, cursive',
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                color: '#b19cd9'
+              }}>
+                Made with dark magic ✨ React & Node.js ⚡
+              </Typography>
+            </Box>
+          </Container>
+        </Box>
       </Box>
-    </Box>
+    </>
   );
 };
 
