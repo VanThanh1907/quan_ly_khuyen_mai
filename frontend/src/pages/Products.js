@@ -20,7 +20,8 @@ import {
   DialogActions,
   Grid,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Autocomplete
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -59,9 +60,12 @@ const Products = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategoriesAndBrands();
   }, [page, rowsPerPage, searchTerm]);
 
   const fetchProducts = async () => {
@@ -83,6 +87,23 @@ const Products = () => {
       setError(err.response?.data?.message || 'Failed to fetch products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategoriesAndBrands = async () => {
+    try {
+      const response = await api.get('/products', { params: { limit: 1000 } });
+      const allProducts = response.data.data;
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+      setCategories(uniqueCategories.sort());
+      
+      // Extract unique brands
+      const uniqueBrands = [...new Set(allProducts.map(p => p.brand).filter(Boolean))];
+      setBrands(uniqueBrands.sort());
+    } catch (err) {
+      console.error('Failed to fetch categories and brands:', err);
     }
   };
 
@@ -413,23 +434,59 @@ const Products = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Category"
-                  name="category"
+                <Autocomplete
+                  freeSolo
+                  options={categories}
                   value={formData.category}
-                  onChange={handleChange}
-                  required
+                  onChange={(event, newValue) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      category: newValue || ''
+                    }));
+                  }}
+                  onInputChange={(event, newInputValue) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      category: newInputValue
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Category"
+                      name="category"
+                      required
+                      helperText="Select from list or type new category"
+                    />
+                  )}
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Brand"
-                  name="brand"
+                <Autocomplete
+                  freeSolo
+                  options={brands}
                   value={formData.brand}
-                  onChange={handleChange}
-                  placeholder="e.g., Nike, Apple, Samsung"
+                  onChange={(event, newValue) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      brand: newValue || ''
+                    }));
+                  }}
+                  onInputChange={(event, newInputValue) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      brand: newInputValue
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Brand"
+                      name="brand"
+                      placeholder="e.g., Nike, Apple, Samsung"
+                      helperText="Select from list or type new brand"
+                    />
+                  )}
                 />
               </Grid>
               <Grid item xs={12}>
