@@ -28,13 +28,8 @@ const promotionSchema = new mongoose.Schema({
   },
   endDate: {
     type: Date,
-    required: [true, 'End date is required'],
-    validate: {
-      validator: function(value) {
-        return value > this.startDate;
-      },
-      message: 'End date must be after start date'
-    }
+    required: [true, 'End date is required']
+    // Validation moved to pre-save hook to handle updates correctly
   },
   applicableProducts: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -125,8 +120,18 @@ promotionSchema.statics.updateAllStatuses = async function() {
   return { total: promotions.length, updated };
 };
 
-// Update the updatedAt timestamp before saving
+// Validate dates before saving
 promotionSchema.pre('save', function(next) {
+  // Validate endDate > startDate using timestamps
+  if (this.startDate && this.endDate) {
+    const startTime = new Date(this.startDate).getTime();
+    const endTime = new Date(this.endDate).getTime();
+    
+    if (endTime <= startTime) {
+      return next(new Error('End date must be after start date'));
+    }
+  }
+  
   this.updatedAt = Date.now();
   
   // Auto-update status based on dates
@@ -135,6 +140,27 @@ promotionSchema.pre('save', function(next) {
     this.status = 'expired';
   } else if (this.startDate <= now && this.endDate >= now && this.status === 'inactive') {
     // Don't automatically activate, let admin control this
+  }
+  
+  next();
+});
+
+// Validate dates before update (findOneAndUpdate, updateOne, etc.)
+promotionSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate();
+  
+  // Get the fields being updated
+  const startDate = update.startDate || update.$set?.startDate;
+  const endDate = update.endDate || update.$set?.endDate;
+  
+  // If both dates are being updated, validate them
+  if (startDate && endDate) {
+    const startTime = new Date(startDate).getTime();
+    const endTime = new Date(endDate).getTime();
+    
+    if (endTime <= startTime) {
+      return next(new Error('End date must be after start date'));
+    }
   }
   
   next();

@@ -32,8 +32,7 @@ const PromotionForm = () => {
     discountPercentage: '',
     startDate: new Date(),
     endDate: new Date(),
-    applicableProducts: [],
-    status: 'inactive'
+    applicableProducts: []
   });
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,8 +67,7 @@ const PromotionForm = () => {
         discountPercentage: promotion.discountPercentage,
         startDate: new Date(promotion.startDate),
         endDate: new Date(promotion.endDate),
-        applicableProducts: promotion.applicableProducts.map(p => p._id),
-        status: promotion.status
+        applicableProducts: promotion.applicableProducts.map(p => p._id)
       });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch promotion');
@@ -113,7 +111,11 @@ const PromotionForm = () => {
       return;
     }
 
-    if (formData.endDate <= formData.startDate) {
+    // Convert to timestamps for reliable comparison
+    const startTime = new Date(formData.startDate).getTime();
+    const endTime = new Date(formData.endDate).getTime();
+    
+    if (endTime <= startTime) {
       setError('End date must be after start date');
       setLoading(false);
       return;
@@ -147,8 +149,8 @@ const PromotionForm = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }} className="animate-fade-in">
-      <Paper elevation={3} sx={{ p: 4 }} className="animate-scale-in">
+    <Container maxWidth="md" sx={{ py: 4, mb: 8 }} className="animate-fade-in">
+      <Paper elevation={3} sx={{ p: 4, position: 'relative', overflow: 'visible' }} className="animate-scale-in">
         <Typography variant="h5" component="h1" gutterBottom className="text-gradient">
           {isEditMode ? 'Edit Promotion' : 'Create New Promotion'}
         </Typography>
@@ -190,7 +192,7 @@ const PromotionForm = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Discount Percentage"
@@ -200,23 +202,8 @@ const PromotionForm = () => {
                 onChange={handleChange}
                 required
                 inputProps={{ min: 0, max: 100 }}
+                helperText="Enter discount percentage (0-100%)"
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  label="Status"
-                >
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
-                  <MenuItem value="expired">Expired</MenuItem>
-                </Select>
-              </FormControl>
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -225,8 +212,40 @@ const PromotionForm = () => {
                   label="Start Date & Time"
                   value={formData.startDate}
                   onChange={(value) => handleDateChange('startDate', value)}
-                  renderInput={(params) => <TextField {...params} fullWidth required />}
-                  slotProps={{ textField: { fullWidth: true, required: true } }}
+                  slotProps={{ 
+                    textField: { fullWidth: true, required: true },
+                    popper: {
+                      placement: 'auto',
+                      modifiers: [
+                        {
+                          name: 'flip',
+                          enabled: true,
+                          options: {
+                            altBoundary: true,
+                            rootBoundary: 'viewport',
+                            padding: 8,
+                          },
+                        },
+                        {
+                          name: 'preventOverflow',
+                          enabled: true,
+                          options: {
+                            altAxis: true,
+                            altBoundary: true,
+                            tether: false,
+                            rootBoundary: 'viewport',
+                            padding: 8,
+                          },
+                        },
+                      ],
+                      sx: { 
+                        zIndex: 9999,
+                        '& .MuiPaper-root': {
+                          marginTop: '8px'
+                        }
+                      }
+                    }
+                  }}
                   ampm={true}
                 />
               </LocalizationProvider>
@@ -238,11 +257,56 @@ const PromotionForm = () => {
                   label="End Date & Time"
                   value={formData.endDate}
                   onChange={(value) => handleDateChange('endDate', value)}
-                  renderInput={(params) => <TextField {...params} fullWidth required />}
-                  slotProps={{ textField: { fullWidth: true, required: true } }}
+                  slotProps={{ 
+                    textField: { fullWidth: true, required: true },
+                    popper: {
+                      placement: 'auto',
+                      modifiers: [
+                        {
+                          name: 'flip',
+                          enabled: true,
+                          options: {
+                            altBoundary: true,
+                            rootBoundary: 'viewport',
+                            padding: 8,
+                          },
+                        },
+                        {
+                          name: 'preventOverflow',
+                          enabled: true,
+                          options: {
+                            altAxis: true,
+                            altBoundary: true,
+                            tether: false,
+                            rootBoundary: 'viewport',
+                            padding: 8,
+                          },
+                        },
+                      ],
+                      sx: { 
+                        zIndex: 9999,
+                        '& .MuiPaper-root': {
+                          marginTop: '8px'
+                        }
+                      }
+                    }
+                  }}
                   ampm={true}
                 />
               </LocalizationProvider>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Alert severity="info" icon={false} sx={{ mt: 1 }}>
+                <Typography variant="body2" fontWeight="bold" gutterBottom>
+                  ℹ️ Status tự động:
+                </Typography>
+                <Typography variant="caption">
+                  • <strong>Inactive:</strong> Nếu chưa tới Start Date<br/>
+                  • <strong>Active:</strong> Trong khoảng Start Date → End Date<br/>
+                  • <strong>Expired:</strong> Sau End Date
+                </Typography>
+              </Alert>
             </Grid>
 
             <Grid item xs={12}>
