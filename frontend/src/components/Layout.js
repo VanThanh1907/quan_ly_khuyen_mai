@@ -16,7 +16,8 @@ import {
   Dashboard as DashboardIcon,
   Inventory as InventoryIcon,
   Logout as LogoutIcon,
-  ShoppingCart as ShoppingCartIcon
+  ShoppingCart as ShoppingCartIcon,
+  AutoStories as GothicIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -114,6 +115,26 @@ const Layout = ({ children }) => {
               }}
             >
               🛍️ Catalog
+            </Button>
+            <Button
+              color="inherit"
+              startIcon={<GothicIcon />}
+              onClick={() => navigate('/catalog-gothic')}
+              className="smooth-transition"
+              sx={{
+                backgroundColor: location.pathname === '/catalog-gothic' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                borderRadius: 2,
+                px: 2,
+                fontWeight: 600,
+                border: location.pathname === '/catalog-gothic' ? '1px solid rgba(255,255,255,0.4)' : 'none',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                }
+              }}
+            >
+              📖 Gothic Emporium
             </Button>
           </Box>
 

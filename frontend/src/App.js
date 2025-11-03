@@ -12,6 +12,7 @@ import PromotionForm from './pages/PromotionForm';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import ProductCatalog from './pages/ProductCatalog';
+import ProductCatalogGothic from './pages/ProductCatalogGothic';
 import theme from './theme';
 
 function App() {
@@ -65,6 +66,17 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <ProductCatalog />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/catalog-gothic"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <ProductCatalogGothic />
                   </Layout>
                 </PrivateRoute>
               }
