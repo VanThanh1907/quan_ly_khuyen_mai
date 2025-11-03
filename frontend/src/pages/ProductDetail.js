@@ -173,8 +173,12 @@ const ProductDetail = () => {
                 <CardMedia
                   component="img"
                   height="500"
-                  image={product.image || 'https://via.placeholder.com/500x500?text=No+Image'}
+                  image={product.imageUrl || product.image || 'https://via.placeholder.com/500x500?text=No+Image'}
                   alt={product.name}
+                  onError={(e) => {
+                    console.error('Image failed to load:', product.imageUrl);
+                    e.target.src = 'https://via.placeholder.com/500x500?text=No+Image';
+                  }}
                   sx={{
                     objectFit: 'cover',
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

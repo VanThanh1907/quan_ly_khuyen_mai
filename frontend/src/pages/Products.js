@@ -51,8 +51,14 @@ const Products = () => {
     price: '',
     category: '',
     description: '',
-    stock: ''
+    stock: '',
+    imageUrl: '',
+    brand: '',
+    ratings: 0
   });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -88,7 +94,10 @@ const Products = () => {
         price: product.price,
         category: product.category,
         description: product.description || '',
-        stock: product.stock || 0
+        stock: product.stock || 0,
+        imageUrl: product.imageUrl || '',
+        brand: product.brand || '',
+        ratings: product.ratings || 0
       });
     } else {
       setEditingProduct(null);
@@ -97,7 +106,10 @@ const Products = () => {
         price: '',
         category: '',
         description: '',
-        stock: ''
+        stock: '',
+        imageUrl: '',
+        brand: '',
+        ratings: 0
       });
     }
     setOpenDialog(true);
@@ -106,6 +118,18 @@ const Products = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingProduct(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData({
+      name: '',
+      price: '',
+      category: '',
+      description: '',
+      stock: '',
+      imageUrl: '',
+      brand: '',
+      ratings: 0
+    });
   };
 
   const handleChange = (e) => {
@@ -113,6 +137,68 @@ const Products = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+
+    // Upload image immediately
+    await uploadImage(file);
+  };
+
+  const uploadImage = async (file) => {
+    const formDataUpload = new FormData();
+    formDataUpload.append('image', file);
+
+    try {
+      setUploadingImage(true);
+      setError('');
+
+      const response = await api.post('/upload/product', formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // Update formData with uploaded image URL
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: response.data.data.imageUrl
+      }));
+
+      console.log('Image uploaded:', response.data.data.imageUrl);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload image');
+      setSelectedImage(null);
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFormData(prev => ({
+      ...prev,
+      imageUrl: ''
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -334,6 +420,92 @@ const Products = () => {
                   value={formData.category}
                   onChange={handleChange}
                   required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Brand"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  placeholder="e.g., Nike, Apple, Samsung"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Box>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="product-image-upload"
+                    type="file"
+                    onChange={handleImageChange}
+                  />
+                  <label htmlFor="product-image-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      fullWidth
+                      sx={{ mb: 2, py: 1.5 }}
+                    >
+                      📷 Choose Product Image
+                    </Button>
+                  </label>
+                  
+                  {imagePreview && (
+                    <Box sx={{ position: 'relative', mb: 2 }}>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{
+                          width: '100%',
+                          maxHeight: '200px',
+                          objectFit: 'contain',
+                          border: '2px solid #ddd',
+                          borderRadius: '8px',
+                          padding: '8px'
+                        }}
+                      />
+                      <IconButton
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          background: 'white',
+                          '&:hover': { background: '#f5f5f5' }
+                        }}
+                        onClick={handleRemoveImage}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  )}
+                  
+                  {uploadingImage && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <CircularProgress size={20} />
+                      <Typography variant="body2">Uploading image...</Typography>
+                    </Box>
+                  )}
+                  
+                  {formData.imageUrl && !imagePreview && (
+                    <Typography variant="caption" color="success.main" display="block" mb={2}>
+                      ✓ Image uploaded: {formData.imageUrl}
+                    </Typography>
+                  )}
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Ratings"
+                  name="ratings"
+                  type="number"
+                  value={formData.ratings}
+                  onChange={handleChange}
+                  inputProps={{ min: 0, max: 5, step: 0.5 }}
+                  helperText="Rating 0-5 stars"
                 />
               </Grid>
               <Grid item xs={12}>

@@ -26,10 +26,14 @@ app.use(cors({
   credentials: true
 }));
 
+// Serve static files - uploaded images
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/promotions', require('./routes/promotionRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // Health check route
 app.get('/api/health', (req, res) => {
