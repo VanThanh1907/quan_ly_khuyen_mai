@@ -4,7 +4,7 @@ const User = require('../models/User');
 /**
  * Protect routes - Verify JWT token
  */
-exports.protect = async (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
   let token;
 
   // Check for token in Authorization header
@@ -42,6 +42,9 @@ exports.protect = async (req, res, next) => {
     });
   }
 };
+
+// Alias for backwards compatibility
+exports.protect = exports.authenticate;
 
 /**
  * Grant access to specific roles

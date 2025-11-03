@@ -12,6 +12,8 @@ import PromotionForm from './pages/PromotionForm';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import ProductCatalogGothic from './pages/ProductCatalogGothic';
+import Orders from './pages/Orders';
+import Cart from './pages/Cart';
 import theme from './theme';
 
 function App() {
@@ -65,6 +67,28 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <ProductCatalogGothic />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/orders"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Orders />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/cart"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <Cart />
                   </Layout>
                 </PrivateRoute>
               }

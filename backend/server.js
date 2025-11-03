@@ -34,6 +34,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/promotions', require('./routes/promotionRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes')); // 🛒 Order routes
+app.use('/api/cart', require('./routes/cartRoutes')); // 🛒 Cart routes
 
 // Health check route
 app.get('/api/health', (req, res) => {

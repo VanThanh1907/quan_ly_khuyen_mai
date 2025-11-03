@@ -304,6 +304,8 @@ const ProductDetail = () => {
   const [activePromotions, setActivePromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchProductDetail();
@@ -327,6 +329,32 @@ const ProductDetail = () => {
       setActivePromotions(response.data.data || []);
     } catch (err) {
       console.error('Failed to load promotions:', err);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    setAddingToCart(true);
+    setError('');
+    setSuccess('');
+    
+    try {
+      await api.post('/cart/add', {
+        productId: product._id,
+        quantity: 1,
+      });
+      
+      setSuccess('✅ Đã thêm vào giỏ hàng!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      setError(err.response?.data?.message || 'Không thể thêm vào giỏ hàng');
+      
+      // Clear error message after 3 seconds
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -465,6 +493,27 @@ const ProductDetail = () => {
           >
             🎃 Back to Catalog
           </Button>
+
+          {/* Success/Error Messages */}
+          {success && (
+            <Alert 
+              severity="success" 
+              sx={{ mt: 2, mb: 2 }} 
+              onClose={() => setSuccess('')}
+            >
+              {success}
+            </Alert>
+          )}
+
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mt: 2, mb: 2 }} 
+              onClose={() => setError('')}
+            >
+              {error}
+            </Alert>
+          )}
 
           {/* Featured Title */}
           <Typography sx={{ ...halloweenStyles.featuredTitle, mt: 4, mb: 2 }}>
@@ -896,11 +945,21 @@ const ProductDetail = () => {
                     variant="contained"
                     size="large"
                     startIcon={<ShoppingCart sx={{ fontSize: '2rem' }} />}
-                    disabled={product.stock === 0}
+                    disabled={product.stock === 0 || addingToCart}
                     fullWidth
+                    onClick={handleAddToCart}
                     sx={halloweenStyles.addToCartButton}
                   >
-                    {product.stock > 0 ? '🛒 Add to Cart' : '❌ Out of Stock'}
+                    {addingToCart ? (
+                      <>
+                        <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                        Adding...
+                      </>
+                    ) : product.stock > 0 ? (
+                      '🛒 Add to Cart'
+                    ) : (
+                      '❌ Out of Stock'
+                    )}
                   </Button>
                 </Stack>
               </Paper>

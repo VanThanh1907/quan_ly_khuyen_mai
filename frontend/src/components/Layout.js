@@ -9,7 +9,8 @@ import {
   Container,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Badge
 } from '@mui/material';
 import {
   AccountCircle,
@@ -17,9 +18,12 @@ import {
   Inventory as InventoryIcon,
   Logout as LogoutIcon,
   ShoppingCart as ShoppingCartIcon,
-  AutoStories as GothicIcon
+  AutoStories as GothicIcon,
+  Receipt as OrderIcon,
+  ShoppingBasket as CartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 // Halloween styles
 const halloweenLayoutStyles = `
@@ -55,6 +59,17 @@ const halloweenLayoutStyles = `
     }
   }
   
+  @keyframes pulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.7);
+    }
+    50% { 
+      transform: scale(1.05);
+      box-shadow: 0 0 0 5px rgba(220, 20, 60, 0);
+    }
+  }
+  
   .halloween-navbar {
     background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 50%, #1a0f2e 100%) !important;
     border-bottom: 3px solid #ff8c00;
@@ -74,6 +89,24 @@ const Layout = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [clickEffects, setClickEffects] = React.useState([]);
+  const [cartItemCount, setCartItemCount] = React.useState(0);
+
+  // Fetch cart count
+  React.useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const response = await api.get('/cart');
+        const totalItems = response.data.data.items.reduce((sum, item) => sum + item.quantity, 0);
+        setCartItemCount(totalItems);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+      }
+    };
+    
+    if (user) {
+      fetchCartCount();
+    }
+  }, [user, location.pathname]); // Re-fetch when path changes
 
   // Click effect handler
   const handlePageClick = (e) => {
@@ -264,9 +297,71 @@ const Layout = ({ children }) => {
               >
                 🛍️ Catalog
               </Button>
+              <Button
+                startIcon={<OrderIcon />}
+                onClick={() => navigate('/orders')}
+                sx={{
+                  background: location.pathname === '/orders' 
+                    ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)' 
+                    : 'rgba(45, 27, 78, 0.6)',
+                  color: location.pathname === '/orders' ? '#1a0f2e' : '#ffa500',
+                  border: '2px solid',
+                  borderColor: location.pathname === '/orders' ? '#ffa500' : '#ff8c00',
+                  borderRadius: 2,
+                  px: 2.5,
+                  py: 0.8,
+                  fontFamily: 'Creepster, cursive',
+                  fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' },
+                  fontWeight: 700,
+                  boxShadow: location.pathname === '/orders' 
+                    ? '0 0 15px rgba(255, 140, 0, 0.5)' 
+                    : 'none',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'translateY(-3px) scale(1.05)',
+                    boxShadow: '0 0 25px rgba(255, 140, 0, 0.7)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                📦 Orders
+              </Button>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {/* Cart Icon with Badge */}
+              <IconButton
+                onClick={() => navigate('/cart')}
+                sx={{
+                  color: location.pathname === '/cart' ? '#1a0f2e' : '#ff8c00',
+                  background: location.pathname === '/cart'
+                    ? 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)'
+                    : 'rgba(45, 27, 78, 0.6)',
+                  border: '2px solid #ff8c00',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                    color: '#1a0f2e',
+                    transform: 'scale(1.1)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                <Badge 
+                  badgeContent={cartItemCount} 
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      background: 'linear-gradient(135deg, #dc143c 0%, #ff0000 100%)',
+                      color: '#fff',
+                      fontWeight: 'bold',
+                      fontSize: '0.75rem',
+                      animation: cartItemCount > 0 ? 'pulse 2s infinite' : 'none'
+                    }
+                  }}
+                >
+                  <CartIcon />
+                </Badge>
+              </IconButton>
               <Box sx={{ 
                 display: 'flex', 
                 alignItems: 'center',

@@ -27,7 +27,8 @@ import {
   LocalOffer as OfferIcon,
   Category as CategoryIcon,
   Close as CloseIcon,
-  AutoAwesome as MagicIcon
+  AutoAwesome as MagicIcon,
+  ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import api from '../utils/api';
 
@@ -41,6 +42,8 @@ const ProductCatalogGothic = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState([]);
   const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [addingToCart, setAddingToCart] = useState({});
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -90,6 +93,35 @@ const ProductCatalogGothic = () => {
 
   const handleViewDetails = (productId) => {
     navigate(`/products/${productId}`);
+  };
+
+  const handleAddToCart = async (productId, e) => {
+    // Prevent navigation to product detail
+    e.stopPropagation();
+    
+    setAddingToCart(prev => ({ ...prev, [productId]: true }));
+    setError('');
+    setSuccess('');
+    
+    try {
+      await api.post('/cart/add', {
+        productId: productId,
+        quantity: 1,
+      });
+      
+      setSuccess('✅ Đã thêm vào giỏ hàng!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      setError(err.response?.data?.message || 'Không thể thêm vào giỏ hàng');
+      
+      // Clear error message after 3 seconds
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setAddingToCart(prev => ({ ...prev, [productId]: false }));
+    }
   };
 
   const getImageUrl = (product) => {
@@ -209,6 +241,27 @@ const ProductCatalogGothic = () => {
       }}
     >
       <Container maxWidth={false} sx={{ py: 8, px: { xs: 2, sm: 4, md: 6 }, position: 'relative', zIndex: 1 }}>
+        {/* Success/Error Messages */}
+        {success && (
+          <Alert 
+            severity="success" 
+            sx={{ mb: 3 }} 
+            onClose={() => setSuccess('')}
+          >
+            {success}
+          </Alert>
+        )}
+
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 3 }} 
+            onClose={() => setError('')}
+          >
+            {error}
+          </Alert>
+        )}
+
         {/* Halloween Header */}
         <Fade in timeout={1000}>
           <Box textAlign="center" mb={8} sx={{ position: 'relative' }}>
@@ -1034,50 +1087,105 @@ const ProductCatalogGothic = () => {
                       </Box>
                     </CardContent>
 
-                    {/* View Details Button - Halloween Style BIGGER */}
+                    {/* Action Buttons - Halloween Style BIGGER */}
                     <Box sx={{ p: 2, pt: 0 }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<span style={{ fontSize: '1.5rem' }}>👁️</span>}
-                        onClick={() => handleViewDetails(product._id)}
-                        sx={{
-                          borderRadius: '10px',
-                          textTransform: 'none',
-                          fontWeight: 700,
-                          fontFamily: '"Creepster", cursive',
-                          fontSize: { xs: '1.1rem', md: '1.3rem' },
-                          py: 2,
-                          background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
-                          border: '3px solid #ffa500',
-                          color: '#000',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          transition: 'all 0.3s',
-                          boxShadow: '0 5px 20px rgba(255, 140, 0, 0.5)',
-                          '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: '-100%',
-                            width: '100%',
-                            height: '100%',
-                            background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
-                            transition: 'left 0.5s'
-                          },
-                          '&:hover': {
-                            transform: 'translateY(-3px) scale(1.02)',
-                            boxShadow: '0 12px 35px rgba(255, 140, 0, 0.8)',
-                            border: '3px solid #fff',
-                            background: 'linear-gradient(135deg, #ffa500 0%, #ff8c00 100%)',
-                            '&::before': {
-                              left: '100%'
-                            }
-                          }
-                        }}
-                      >
-                        🎃 Inspect This Treasure! 🎃
-                      </Button>
+                      <Grid container spacing={1.5}>
+                        {/* Add to Cart Button */}
+                        <Grid item xs={12} sm={6}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            startIcon={addingToCart[product._id] ? null : <ShoppingCartIcon sx={{ fontSize: '1.3rem' }} />}
+                            onClick={(e) => handleAddToCart(product._id, e)}
+                            disabled={product.stock === 0 || addingToCart[product._id]}
+                            sx={{
+                              borderRadius: '10px',
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              fontFamily: '"Creepster", cursive',
+                              fontSize: { xs: '0.95rem', md: '1.1rem' },
+                              py: 1.5,
+                              background: product.stock === 0 
+                                ? 'linear-gradient(135deg, #666 0%, #444 100%)'
+                                : 'linear-gradient(135deg, #39ff14 0%, #00ff00 100%)',
+                              border: product.stock === 0 ? '2px solid #444' : '2px solid #39ff14',
+                              color: '#000',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              transition: 'all 0.3s',
+                              boxShadow: product.stock === 0 
+                                ? '0 3px 10px rgba(0, 0, 0, 0.3)'
+                                : '0 3px 15px rgba(57, 255, 20, 0.5)',
+                              '&:hover': product.stock > 0 ? {
+                                transform: 'translateY(-2px) scale(1.02)',
+                                boxShadow: '0 8px 25px rgba(57, 255, 20, 0.7)',
+                                border: '2px solid #fff',
+                              } : {},
+                              '&:disabled': {
+                                color: '#999',
+                                background: 'linear-gradient(135deg, #444 0%, #222 100%)',
+                              }
+                            }}
+                          >
+                            {addingToCart[product._id] ? (
+                              <>
+                                <CircularProgress size={16} sx={{ color: '#fff', mr: 1 }} />
+                                Adding...
+                              </>
+                            ) : product.stock > 0 ? (
+                              '🛒 Add to Cart'
+                            ) : (
+                              '❌ Out of Stock'
+                            )}
+                          </Button>
+                        </Grid>
+
+                        {/* View Details Button */}
+                        <Grid item xs={12} sm={6}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            startIcon={<span style={{ fontSize: '1.3rem' }}>👁️</span>}
+                            onClick={() => handleViewDetails(product._id)}
+                            sx={{
+                              borderRadius: '10px',
+                              textTransform: 'none',
+                              fontWeight: 700,
+                              fontFamily: '"Creepster", cursive',
+                              fontSize: { xs: '0.95rem', md: '1.1rem' },
+                              py: 1.5,
+                              background: 'linear-gradient(135deg, #ff8c00 0%, #ffa500 100%)',
+                              border: '2px solid #ffa500',
+                              color: '#000',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              transition: 'all 0.3s',
+                              boxShadow: '0 3px 15px rgba(255, 140, 0, 0.5)',
+                              '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                top: 0,
+                                left: '-100%',
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
+                                transition: 'left 0.5s'
+                              },
+                              '&:hover': {
+                                transform: 'translateY(-2px) scale(1.02)',
+                                boxShadow: '0 8px 25px rgba(255, 140, 0, 0.7)',
+                                border: '2px solid #fff',
+                                background: 'linear-gradient(135deg, #ffa500 0%, #ff8c00 100%)',
+                                '&::before': {
+                                  left: '100%'
+                                }
+                              }
+                            }}
+                          >
+                            👁️ View
+                          </Button>
+                        </Grid>
+                      </Grid>
                     </Box>
                   </Card>
                 </Fade>
