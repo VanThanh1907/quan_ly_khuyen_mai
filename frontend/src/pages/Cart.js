@@ -47,11 +47,13 @@ const Cart = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [validationWarnings, setValidationWarnings] = useState([]);
   const [shippingAddress, setShippingAddress] = useState({
-    street: '',
+    fullName: '',
+    phone: '',
+    address: '',
     city: '',
-    state: '',
+    district: '',
+    ward: '',
     zipCode: '',
-    country: 'Vietnam',
   });
 
   const fetchCart = useCallback(async () => {
@@ -114,42 +116,65 @@ const Cart = () => {
     }
   };
 
-  const clearCart = async () => {
-    if (!window.confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) return;
+  const clearCart = async (skipConfirm = false) => {
+    if (!skipConfirm && !window.confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) return;
 
     try {
       await api.delete('/cart/clear');
-      setCart({ items: [], userId: cart.userId });
-      setSuccess('Đã xóa toàn bộ giỏ hàng');
-      setTimeout(() => setSuccess(''), 3000);
+      setCart({ items: [], userId: cart?.userId });
+      if (!skipConfirm) {
+        setSuccess('Đã xóa toàn bộ giỏ hàng');
+        setTimeout(() => setSuccess(''), 3000);
+      }
     } catch (err) {
       console.error('Error clearing cart:', err);
-      setError(err.response?.data?.message || 'Không thể xóa giỏ hàng');
-      setTimeout(() => setError(''), 3000);
+      if (!skipConfirm) {
+        setError(err.response?.data?.message || 'Không thể xóa giỏ hàng');
+        setTimeout(() => setError(''), 3000);
+      }
     }
   };
 
-  const validateBeforeCheckout = async () => {
+  const validateBeforeCheckout = () => {
     try {
-      const response = await api.get('/cart/validate');
-      const { valid, warnings } = response.data.data;
+      // Validate cart locally
+      const warnings = [];
       
-      if (!valid) {
-        setValidationWarnings(warnings);
+      if (!cart || !cart.items || cart.items.length === 0) {
+        setError('Giỏ hàng trống');
         return false;
       }
-      
+
+      // Check each item for stock issues
+      for (const item of cart.items) {
+        // Check if stock info is available
+        const stock = typeof item.stock === 'number' ? item.stock : 0;
+        
+        if (stock === 0 || item.available === false) {
+          warnings.push(`${item.productSnapshot.name} đã hết hàng`);
+        } else if (stock < item.quantity) {
+          warnings.push(`${item.productSnapshot.name} chỉ còn ${stock} sản phẩm`);
+        }
+      }
+
+      if (warnings.length > 0) {
+        setValidationWarnings(warnings);
+        setError('Một số sản phẩm trong giỏ hàng có vấn đề về tồn kho');
+        return false;
+      }
+
       setValidationWarnings([]);
+      setError(''); // Clear any previous errors
       return true;
     } catch (err) {
-      console.error('Error validating cart:', err);
-      setError(err.response?.data?.message || 'Không thể kiểm tra giỏ hàng');
+      console.error('Validation error:', err);
+      setError('Lỗi khi kiểm tra giỏ hàng');
       return false;
     }
   };
 
-  const handleCheckoutClick = async () => {
-    const isValid = await validateBeforeCheckout();
+  const handleCheckoutClick = () => {
+    const isValid = validateBeforeCheckout();
     if (isValid) {
       setCheckoutOpen(true);
     }
@@ -157,19 +182,43 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     // Validate shipping address
-    if (!shippingAddress.street || !shippingAddress.city || !shippingAddress.zipCode) {
-      setError('Vui lòng điền đầy đủ địa chỉ giao hàng');
+    if (!shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
+      setError('Vui lòng điền đầy đủ thông tin giao hàng (Họ tên, SĐT, Địa chỉ, Thành phố)');
       return;
     }
 
     setCheckoutLoading(true);
     try {
-      const response = await api.post('/cart/checkout', { shippingAddress });
-      setSuccess(`Đặt hàng thành công! Mã đơn hàng: ${response.data.data.orderNumber}`);
+      // Prepare order data from cart
+      const orderData = {
+        items: cart.items.map(item => ({
+          productId: item.productId || item._id, // Handle both formats
+          quantity: item.quantity
+        })),
+        shippingAddress: {
+          fullName: shippingAddress.fullName,
+          phone: shippingAddress.phone,
+          address: shippingAddress.address,
+          city: shippingAddress.city,
+          district: shippingAddress.district || '',
+          ward: shippingAddress.ward || '',
+          zipCode: shippingAddress.zipCode || ''
+        },
+        paymentMethod: 'cash', // Match enum in schema
+        notes: ''
+      };
+
+      console.log('Order data being sent:', orderData); // Debug log
+
+      // Create order
+      const response = await api.post('/orders', orderData);
+      const order = response.data.data;
+      
+      setSuccess(`✅ Đặt hàng thành công! Mã đơn hàng: ${order.orderNumber}`);
       setCheckoutOpen(false);
       
-      // Refresh cart (should be empty now)
-      await fetchCart();
+      // Clear cart after successful order (skip confirmation dialog)
+      await clearCart(true);
       
       // Navigate to orders page after 2 seconds
       setTimeout(() => {
@@ -177,7 +226,13 @@ const Cart = () => {
       }, 2000);
     } catch (err) {
       console.error('Error during checkout:', err);
-      setError(err.response?.data?.message || 'Không thể hoàn tất đơn hàng');
+      console.error('Error response:', err.response?.data);
+      
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          'Không thể hoàn tất đơn hàng';
+      
+      setError(errorMessage);
       
       // If stock validation failed, refresh cart to show updated data
       if (err.response?.status === 400) {
@@ -190,6 +245,7 @@ const Cart = () => {
 
   const calculateSubtotal = () => {
     if (!cart || !cart.items) return 0;
+    // Use currentPrice (before discount)
     return cart.items.reduce((sum, item) => {
       const price = item.currentPrice || item.productSnapshot.price;
       return sum + (price * item.quantity);
@@ -197,15 +253,21 @@ const Cart = () => {
   };
 
   const calculateDiscount = () => {
-    const subtotal = calculateSubtotal();
-    const total = calculateTotal();
-    return subtotal - total;
+    if (!cart || !cart.items) return 0;
+    // Calculate total discount from all items
+    return cart.items.reduce((sum, item) => {
+      if (item.promotion && item.promotion.discountAmount) {
+        return sum + (item.promotion.discountAmount * item.quantity);
+      }
+      return sum;
+    }, 0);
   };
 
   const calculateTotal = () => {
     if (!cart || !cart.items) return 0;
+    // Use discountedPrice (after discount)
     return cart.items.reduce((sum, item) => {
-      const price = item.currentPrice || item.productSnapshot.price;
+      const price = item.discountedPrice || item.currentPrice || item.productSnapshot.price;
       return sum + (price * item.quantity);
     }, 0);
   };
@@ -332,9 +394,9 @@ const Cart = () => {
               </TableHead>
               <TableBody>
                 {cart.items.map((item) => {
-                  const currentPrice = item.currentPrice || item.productSnapshot.price;
-                  const hasPromotion = item.activePromotion;
-                  const isOutOfStock = item.stock === 0;
+                  const currentPrice = item.discountedPrice || item.currentPrice || item.productSnapshot.price;
+                  const hasPromotion = item.promotion;
+                  const isOutOfStock = item.stock === 0 || item.available === false;
                   const isLowStock = item.stock > 0 && item.stock < item.quantity;
 
                   return (
@@ -358,7 +420,7 @@ const Cart = () => {
                             </Typography>
                             {hasPromotion && (
                               <Chip
-                                label={`-${item.activePromotion.discountPercentage}%`}
+                                label={`-${item.promotion.discountPercentage}%`}
                                 size="small"
                                 sx={{
                                   background: 'linear-gradient(135deg, #dc143c 0%, #ff0000 100%)',
@@ -408,39 +470,80 @@ const Cart = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1.5,
+                            background: 'linear-gradient(135deg, rgba(255, 140, 0, 0.1) 0%, rgba(255, 69, 0, 0.1) 100%)',
+                            border: '2px solid #ff8c00',
+                            borderRadius: '12px',
+                            p: 1,
+                            boxShadow: '0 0 15px rgba(255, 140, 0, 0.3)'
+                          }}
+                        >
                           <IconButton
-                            size="small"
+                            size="large"
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                             disabled={updating[item.productId] || item.quantity <= 1}
                             sx={{
                               color: '#ff8c00',
-                              border: '1px solid #ff8c00',
-                              '&:hover': { background: 'rgba(255, 140, 0, 0.1)' },
+                              background: 'linear-gradient(135deg, rgba(255, 140, 0, 0.2) 0%, rgba(255, 69, 0, 0.2) 100%)',
+                              border: '2px solid #ff8c00',
+                              width: 45,
+                              height: 45,
+                              '&:hover': { 
+                                background: 'linear-gradient(135deg, rgba(255, 140, 0, 0.4) 0%, rgba(255, 69, 0, 0.4) 100%)',
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 0 20px rgba(255, 140, 0, 0.6)',
+                              },
+                              '&:disabled': {
+                                background: 'rgba(100, 100, 100, 0.2)',
+                                border: '2px solid #666',
+                                color: '#666'
+                              },
+                              transition: 'all 0.2s'
                             }}
                           >
-                            <RemoveIcon />
+                            <RemoveIcon fontSize="medium" />
                           </IconButton>
-                          <TextField
-                            value={item.quantity}
-                            size="small"
-                            disabled
+                          <Typography
                             sx={{
-                              width: 60,
-                              '& input': { textAlign: 'center', color: '#fff' },
+                              width: 70,
+                              textAlign: 'center',
+                              color: '#ff8c00',
+                              fontWeight: 'bold',
+                              fontSize: '1.4rem',
+                              fontFamily: 'Creepster, cursive',
+                              minWidth: '70px'
                             }}
-                          />
+                          >
+                            {item.quantity}
+                          </Typography>
                           <IconButton
-                            size="small"
+                            size="large"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                             disabled={updating[item.productId] || item.quantity >= item.stock}
                             sx={{
-                              color: '#ff8c00',
-                              border: '1px solid #ff8c00',
-                              '&:hover': { background: 'rgba(255, 140, 0, 0.1)' },
+                              color: '#39ff14',
+                              background: 'linear-gradient(135deg, rgba(57, 255, 20, 0.2) 0%, rgba(0, 255, 0, 0.2) 100%)',
+                              border: '2px solid #39ff14',
+                              width: 45,
+                              height: 45,
+                              '&:hover': { 
+                                background: 'linear-gradient(135deg, rgba(57, 255, 20, 0.4) 0%, rgba(0, 255, 0, 0.4) 100%)',
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 0 20px rgba(57, 255, 20, 0.6)',
+                              },
+                              '&:disabled': {
+                                background: 'rgba(100, 100, 100, 0.2)',
+                                border: '2px solid #666',
+                                color: '#666'
+                              },
+                              transition: 'all 0.2s'
                             }}
                           >
-                            <AddIcon />
+                            <AddIcon fontSize="medium" />
                           </IconButton>
                         </Box>
                       </TableCell>
@@ -611,9 +714,9 @@ const Cart = () => {
           <Box sx={{ pt: 2 }}>
             <TextField
               fullWidth
-              label="Địa chỉ"
-              value={shippingAddress.street}
-              onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
+              label="Họ và tên *"
+              value={shippingAddress.fullName}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
               margin="normal"
               required
               sx={{
@@ -627,7 +730,71 @@ const Cart = () => {
             />
             <TextField
               fullWidth
-              label="Thành phố"
+              label="Số điện thoại *"
+              value={shippingAddress.phone}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, phone: e.target.value })}
+              margin="normal"
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#ff8c00' },
+                  '&:hover fieldset': { borderColor: '#ff6600' },
+                },
+                '& .MuiInputLabel-root': { color: '#ff8c00' },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Địa chỉ *"
+              value={shippingAddress.address}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
+              margin="normal"
+              required
+              multiline
+              rows={2}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#ff8c00' },
+                  '&:hover fieldset': { borderColor: '#ff6600' },
+                },
+                '& .MuiInputLabel-root': { color: '#ff8c00' },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Phường/Xã"
+              value={shippingAddress.ward}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, ward: e.target.value })}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#ff8c00' },
+                  '&:hover fieldset': { borderColor: '#ff6600' },
+                },
+                '& .MuiInputLabel-root': { color: '#ff8c00' },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Quận/Huyện"
+              value={shippingAddress.district}
+              onChange={(e) => setShippingAddress({ ...shippingAddress, district: e.target.value })}
+              margin="normal"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: '#fff',
+                  '& fieldset': { borderColor: '#ff8c00' },
+                  '&:hover fieldset': { borderColor: '#ff6600' },
+                },
+                '& .MuiInputLabel-root': { color: '#ff8c00' },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Thành phố *"
               value={shippingAddress.city}
               onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
               margin="normal"
@@ -643,40 +810,9 @@ const Cart = () => {
             />
             <TextField
               fullWidth
-              label="Tỉnh/Thành"
-              value={shippingAddress.state}
-              onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-              margin="normal"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  color: '#fff',
-                  '& fieldset': { borderColor: '#ff8c00' },
-                  '&:hover fieldset': { borderColor: '#ff6600' },
-                },
-                '& .MuiInputLabel-root': { color: '#ff8c00' },
-              }}
-            />
-            <TextField
-              fullWidth
               label="Mã bưu điện"
               value={shippingAddress.zipCode}
               onChange={(e) => setShippingAddress({ ...shippingAddress, zipCode: e.target.value })}
-              margin="normal"
-              required
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  color: '#fff',
-                  '& fieldset': { borderColor: '#ff8c00' },
-                  '&:hover fieldset': { borderColor: '#ff6600' },
-                },
-                '& .MuiInputLabel-root': { color: '#ff8c00' },
-              }}
-            />
-            <TextField
-              fullWidth
-              label="Quốc gia"
-              value={shippingAddress.country}
-              onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
               margin="normal"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -688,6 +824,17 @@ const Cart = () => {
               }}
             />
           </Box>
+          <Typography
+            variant="caption"
+            sx={{
+              display: 'block',
+              textAlign: 'center',
+              color: '#999',
+              mt: 2,
+            }}
+          >
+            * Thông tin bắt buộc
+          </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 3, justifyContent: 'space-between' }}>
           <Button

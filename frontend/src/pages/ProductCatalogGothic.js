@@ -1068,20 +1068,53 @@ const ProductCatalogGothic = () => {
                         )}
                         
                         {product.stock > 0 && (
-                          <Box display="flex" alignItems="center" gap={1.5} mt={2}>
-                            <span style={{ fontSize: '1.3rem' }}>📦</span>
-                            <Typography 
-                              variant="h6" 
-                              sx={{ 
-                                color: '#aaa',
-                                display: 'block',
-                                fontFamily: '"Creepster", cursive',
-                                fontSize: { xs: '1rem', md: '1.1rem', lg: '1.2rem' },
-                                fontWeight: 500
-                              }}
-                            >
-                              {product.stock} in the haunted vault
-                            </Typography>
+                          <Box 
+                            display="flex" 
+                            alignItems="center" 
+                            gap={1.5} 
+                            mt={2}
+                            sx={{
+                              background: product.stock < 20 
+                                ? 'linear-gradient(135deg, rgba(255, 140, 0, 0.2) 0%, rgba(255, 69, 0, 0.2) 100%)'
+                                : 'linear-gradient(135deg, rgba(57, 255, 20, 0.15) 0%, rgba(0, 255, 0, 0.15) 100%)',
+                              border: product.stock < 20 
+                                ? '2px solid #ff8c00' 
+                                : '2px solid #39ff14',
+                              borderRadius: '10px',
+                              p: 1.5,
+                              boxShadow: product.stock < 20
+                                ? '0 0 15px rgba(255, 140, 0, 0.4)'
+                                : '0 0 15px rgba(57, 255, 20, 0.3)'
+                            }}
+                          >
+                            <span style={{ fontSize: '1.8rem' }}>📦</span>
+                            <Box>
+                              <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                  color: product.stock < 20 ? '#ff8c00' : '#39ff14',
+                                  display: 'block',
+                                  fontFamily: '"Creepster", cursive',
+                                  fontSize: { xs: '1.3rem', md: '1.4rem', lg: '1.5rem' },
+                                  fontWeight: 700,
+                                  lineHeight: 1.2
+                                }}
+                              >
+                                {product.stock} {product.stock === 1 ? 'item' : 'items'}
+                              </Typography>
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  color: '#aaa',
+                                  display: 'block',
+                                  fontFamily: '"Creepster", cursive',
+                                  fontSize: { xs: '0.85rem', md: '0.9rem' },
+                                  fontWeight: 400
+                                }}
+                              >
+                                {product.stock < 20 ? '⚠️ Limited stock!' : 'In the haunted vault'}
+                              </Typography>
+                            </Box>
                           </Box>
                         )}
                       </Box>

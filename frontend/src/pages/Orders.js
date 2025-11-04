@@ -183,9 +183,9 @@ const Orders = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'USD'
     }).format(amount);
   };
 
@@ -314,13 +314,13 @@ const Orders = () => {
         <TableContainer component={Paper} className="halloween-card">
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell className="halloween-table-header">Order #</TableCell>
-                <TableCell className="halloween-table-header">Date</TableCell>
-                <TableCell className="halloween-table-header">Items</TableCell>
-                <TableCell className="halloween-table-header">Total</TableCell>
-                <TableCell className="halloween-table-header">Status</TableCell>
-                <TableCell className="halloween-table-header">Actions</TableCell>
+              <TableRow sx={{ height: '70px' }}>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Order #</TableCell>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Date</TableCell>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Items</TableCell>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Total</TableCell>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Status</TableCell>
+                <TableCell className="halloween-table-header" sx={{ fontSize: '1.2rem', py: 3 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -334,17 +334,27 @@ const Orders = () => {
                 </TableRow>
               ) : (
                 orders.map((order) => (
-                  <TableRow key={order._id} className="halloween-table-row">
-                    <TableCell sx={{ color: '#ff8c00', fontWeight: 'bold' }}>
+                  <TableRow 
+                    key={order._id} 
+                    className="halloween-table-row"
+                    sx={{ 
+                      height: '80px',
+                      '& td': { 
+                        py: 3,
+                        fontSize: '1.1rem'
+                      }
+                    }}
+                  >
+                    <TableCell sx={{ color: '#ff8c00', fontWeight: 'bold', fontSize: '1.15rem' }}>
                       {order.orderNumber}
                     </TableCell>
-                    <TableCell sx={{ color: '#b19cd9' }}>
+                    <TableCell sx={{ color: '#b19cd9', fontSize: '1.05rem' }}>
                       {formatDate(order.createdAt)}
                     </TableCell>
-                    <TableCell sx={{ color: '#ffa500' }}>
+                    <TableCell sx={{ color: '#ffa500', fontSize: '1.05rem' }}>
                       {order.items.length} item(s)
                     </TableCell>
-                    <TableCell sx={{ color: '#39ff14', fontWeight: 'bold' }}>
+                    <TableCell sx={{ color: '#39ff14', fontWeight: 'bold', fontSize: '1.15rem' }}>
                       {formatCurrency(order.finalAmount)}
                     </TableCell>
                     <TableCell>
@@ -354,7 +364,10 @@ const Orders = () => {
                           background: getStatusColor(order.status),
                           color: '#fff',
                           fontFamily: 'Creepster, cursive',
-                          fontWeight: 'bold'
+                          fontWeight: 'bold',
+                          fontSize: '1rem',
+                          py: 2.5,
+                          px: 1.5
                         }}
                       />
                     </TableCell>
@@ -362,22 +375,24 @@ const Orders = () => {
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <IconButton
                           onClick={() => handleViewOrder(order._id)}
+                          size="large"
                           sx={{
                             color: '#00bfff',
                             '&:hover': { background: 'rgba(0, 191, 255, 0.2)' }
                           }}
                         >
-                          <ViewIcon />
+                          <ViewIcon fontSize="medium" />
                         </IconButton>
                         {order.status === 'pending' && !isAdmin() && (
                           <IconButton
                             onClick={() => handleCancelOrder(order._id)}
+                            size="large"
                             sx={{
                               color: '#dc143c',
                               '&:hover': { background: 'rgba(220, 20, 60, 0.2)' }
                             }}
                           >
-                            <CancelIcon />
+                            <CancelIcon fontSize="medium" />
                           </IconButton>
                         )}
                       </Box>
